@@ -37,6 +37,7 @@ func main() {
 		return
 	}
 	files := getAllFile(source, "")
+	fmt.Println(files)
 	if err != nil {
 		fmt.Println(err)
 		return
