@@ -25,7 +25,7 @@ func main() {
 	accessKeySecret := os.Getenv("PLUGIN_ACCESS_KEY_SECRET")
 	bucketName := os.Getenv("PLUGIN_BUCKET_NAME")
 	target := os.Getenv("PLUGIN_TARGET")
-	local := os.Getenv("PLUGIN_LOCAL")
+	source := os.Getenv("PLUGIN_SOURCE")
 	client, err := oss.New(endpoint, accessKeyID, accessKeySecret)
 	if err != nil {
 		fmt.Println(err)
@@ -36,13 +36,13 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-	files := getAllFile(local, "")
+	files := getAllFile(source, "")
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 	for _, file := range files {
-		err = bucket.PutObjectFromFile(path.Join(target, file), path.Join(local, file))
+		err = bucket.PutObjectFromFile(path.Join(target, file), path.Join(source, file))
 		if err != nil {
 			fmt.Println(err)
 			return
