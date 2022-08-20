@@ -1,0 +1,57 @@
+kind: pipeline
+volumes:
+  - name: ssh_keys
+    host:
+      path: /root/.ssh
+clone:
+  disable: true
+
+steps:
+  - name: feishu
+    image: registry.cn-shanghai.aliyuncs.com/zzf2001/foo-webhook
+    settings:
+      webhook:
+        from_secret: webhook
+      secret:
+        from_secret: secret
+      text: hello
+  - name: clone
+    image: alpine/git
+    volumes:
+      - name: ssh_keys
+        path: /root/.ssh
+    environment:
+      warehouse_name: feishu-bot
+
+    commands:
+      - echo $DRONE_COMMIT_BRANCH
+      - echo $DRONE_GIT_SSH_URL
+      - ls /root/.ssh/
+      - chmod -R 600 /root/.ssh/
+      - ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
+      - git clone -b $DRONE_COMMIT_BRANCH --depth=1 $DRONE_GIT_SSH_URL
+      - cd $warehouse_name
+      - pwd
+      - mv -f * .[^.]* /drone/src
+      - ls
+
+  - name: build
+    image: golang:1.19.0-alpine3.16
+    depends_on: [clone]
+    commands:
+      - pwd
+      - ls -a
+      - GOOS=linux GOARCH=amd64 go build -o main
+
+  - name: build dummy docker file and publish
+    depends_on: [ build ]
+    image: plugins/docker
+    pull: if-not-exists
+    settings:
+      registry: registry.cn-shanghai.aliyuncs.com
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+      repo: registry.cn-shanghai.aliyuncs.com/zzf2001/drone-aliyun-oss
+      tags: latest

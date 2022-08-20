@@ -7,39 +7,25 @@ import (
 	"path"
 )
 
-func getAllFile(dirPath string) (allFiles []string) {
-	var dirs []string
+func getAllFile(dirPath string, parentPath string) (allFiles []string) {
 	files, _ := os.ReadDir(dirPath)
 	for _, f := range files {
 		if f.IsDir() {
-			dirs = append(dirs, dirPath+string(os.PathSeparator)+f.Name())
-			getAllFile(dirPath + string(os.PathSeparator) + f.Name())
+			subFlies := getAllFile(dirPath+string(os.PathSeparator)+f.Name(), parentPath+string(os.PathSeparator)+f.Name())
+			allFiles = append(allFiles, subFlies...)
 		} else {
-			allFiles = append(allFiles, dirPath+string(os.PathSeparator)+f.Name())
-		}
-	}
-	fmt.Println(dirs)
-	for _, table := range dirs {
-		temp := getAllFile(table)
-		for _, temp1 := range temp {
-			allFiles = append(allFiles, temp1)
+			allFiles = append(allFiles, parentPath+string(os.PathSeparator)+f.Name())
 		}
 	}
 	return allFiles
 }
 func main() {
-	endpoint := "oss-cn-shanghai.aliyuncs.com"
-	accessKeyID := "LTAI4FdxJLj9gSDFcAM9SXu2"
-	accessKeySecret := "9KIAbO6ma599LDRVoTvStPCVRvJqug"
-	bucketName := "zzfzzf"
-	target := "example"
-	local := "example"
-	//endpoint := os.Getenv("PLUGIN_ENDPOINT")
-	//accessKeyID := os.Getenv("PLUGIN_ACCESS_KEY_ID")
-	//accessKeySecret := os.Getenv("PLUGIN_ACCESS_KEY_SECRET")
-	//bucketName := os.Getenv("PLUGIN_BUCKET_NAME")
-	//target := os.Getenv("PLUGIN_TARGET")
-	//local := os.Getenv("PLUGIN_LOCAL")
+	endpoint := os.Getenv("PLUGIN_ENDPOINT")
+	accessKeyID := os.Getenv("PLUGIN_ACCESS_KEY_ID")
+	accessKeySecret := os.Getenv("PLUGIN_ACCESS_KEY_SECRET")
+	bucketName := os.Getenv("PLUGIN_BUCKET_NAME")
+	target := os.Getenv("PLUGIN_TARGET")
+	local := os.Getenv("PLUGIN_LOCAL")
 	client, err := oss.New(endpoint, accessKeyID, accessKeySecret)
 	if err != nil {
 		fmt.Println(err)
@@ -50,10 +36,13 @@ func main() {
 		fmt.Println(err)
 		return
 	}
-	files := getAllFile(local)
+	files := getAllFile(local, "")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 	for _, file := range files {
-		fmt.Println("res", path.Join(target, file), file)
-		err = bucket.PutObjectFromFile(path.Join(target, file), file)
+		err = bucket.PutObjectFromFile(path.Join(target, file), path.Join(local, file))
 		if err != nil {
 			fmt.Println(err)
 			return
