@@ -5,6 +5,7 @@ import (
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
 	"os"
 	"path"
+	"strings"
 )
 
 func getAllFile(dirPath string, parentPath string) (allFiles []string) {
@@ -26,6 +27,11 @@ func main() {
 	bucketName := os.Getenv("PLUGIN_BUCKET_NAME")
 	target := os.Getenv("PLUGIN_TARGET")
 	source := os.Getenv("PLUGIN_SOURCE")
+	if strings.HasPrefix(target, "/") {
+		fmt.Println("target不能以/开头")
+		os.Exit(1)
+	}
+
 	client, err := oss.New(endpoint, accessKeyID, accessKeySecret)
 	if err != nil {
 		fmt.Println(err)
@@ -34,18 +40,20 @@ func main() {
 	bucket, err := client.Bucket(bucketName)
 	if err != nil {
 		fmt.Println(err)
+		os.Exit(1)
 		return
 	}
 	files := getAllFile(source, "")
-	fmt.Println(files)
 	if err != nil {
 		fmt.Println(err)
+		os.Exit(1)
 		return
 	}
 	for _, file := range files {
 		err = bucket.PutObjectFromFile(path.Join(target, file), path.Join(source, file))
 		if err != nil {
 			fmt.Println(err)
+			os.Exit(1)
 			return
 		}
 	}
