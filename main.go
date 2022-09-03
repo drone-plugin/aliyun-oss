@@ -5,6 +5,7 @@ import (
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
 	"os"
 	"path"
+	"strconv"
 	"strings"
 )
 
@@ -49,8 +50,15 @@ func main() {
 		os.Exit(1)
 		return
 	}
-	for _, file := range files {
+	filesLen := float64(len(files))
+	for index, file := range files {
+		idx := float64(index+1) * 100
 		err = bucket.PutObjectFromFile(path.Join(target, file), path.Join(source, file))
+		float, err := strconv.ParseFloat(fmt.Sprintf("%.2f", idx/filesLen), 64)
+		fmt.Println(float, "%")
+		if err != nil {
+			return
+		}
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
