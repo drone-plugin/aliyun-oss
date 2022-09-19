@@ -1,4 +1,6 @@
 kind: pipeline
+type: docker
+name: default
 volumes:
   - name: ssh_keys
     host:
@@ -7,33 +9,16 @@ clone:
   disable: true
 
 steps:
-  - name: feishu
-    image: registry.cn-shanghai.aliyuncs.com/zzf2001/foo-webhook
-    settings:
-      webhook:
-        from_secret: webhook
-      secret:
-        from_secret: secret
-      text: hello
   - name: clone
     image: alpine/git
     volumes:
       - name: ssh_keys
         path: /root/.ssh
-    environment:
-      warehouse_name: oss
-
     commands:
-      - echo $DRONE_COMMIT_BRANCH
-      - echo $DRONE_GIT_SSH_URL
-      - ls /root/.ssh/
-      - chmod -R 600 /root/.ssh/
-      - ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
-      - git clone -b $DRONE_COMMIT_BRANCH --depth=1 $DRONE_GIT_SSH_URL
-      - cd $warehouse_name
-      - pwd
-      - mv -f * .[^.]* /drone/src
-      - ls
+      - git init
+      - git remote add origin $DRONE_GIT_SSH_URL
+      - git fetch --no-tags --prune --progress --no-recurse-submodules --depth=1
+      - git checkout origin/$DRONE_COMMIT_BRANCH -ft
 
   - name: build
     image: golang:1.19.0-alpine3.16
