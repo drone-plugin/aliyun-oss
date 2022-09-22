@@ -52,16 +52,24 @@ func main() {
 	filesLen := float64(len(files))
 	for index, file := range files {
 		idx := float64(index+1) * 100
-		err = bucket.PutObjectFromFile(path.Join(target, file), path.Join(source, file))
+		target = path.Join(target, file)
+		if strings.HasPrefix(target, "/") {
+			target = target[1:]
+		}
+		err = bucket.PutObjectFromFile(target, path.Join(source, file))
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
 		float, err := strconv.ParseFloat(fmt.Sprintf("%.2f", idx/filesLen), 64)
 		fmt.Println(float, "%", path.Join(target, file))
 		if err != nil {
-			return
+			fmt.Println(err)
+			os.Exit(1)
 		}
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
-			return
 		}
 	}
 }
