@@ -62,7 +62,7 @@ func main() {
 			os.Exit(1)
 		}
 		float, err := strconv.ParseFloat(fmt.Sprintf("%.2f", idx/filesLen), 64)
-		fmt.Println(float, "%", path.Join(target, file))
+		fmt.Println(float, "%", target)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
