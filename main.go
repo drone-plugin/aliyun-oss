@@ -29,8 +29,7 @@ func main() {
 	target := os.Getenv("PLUGIN_TARGET")
 	source := os.Getenv("PLUGIN_SOURCE")
 	if strings.HasPrefix(target, "/") {
-		fmt.Println("target不能以/开头")
-		os.Exit(1)
+		target = ""
 	}
 
 	client, err := oss.New(endpoint, accessKeyID, accessKeySecret)
