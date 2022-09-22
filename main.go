@@ -28,9 +28,6 @@ func main() {
 	bucketName := os.Getenv("PLUGIN_BUCKET_NAME")
 	target := os.Getenv("PLUGIN_TARGET")
 	source := os.Getenv("PLUGIN_SOURCE")
-	if strings.HasPrefix(target, "/") {
-		target = ""
-	}
 
 	client, err := oss.New(endpoint, accessKeyID, accessKeySecret)
 	if err != nil {
@@ -52,17 +49,17 @@ func main() {
 	filesLen := float64(len(files))
 	for index, file := range files {
 		idx := float64(index+1) * 100
-		target = path.Join(target, file)
-		if strings.HasPrefix(target, "/") {
-			target = target[1:]
+		fileTarget := path.Join(target, file)
+		fileSource := path.Join(source, file)
+		if strings.HasPrefix(fileTarget, "/") {
+			fileTarget = fileTarget[1:]
 		}
-		err = bucket.PutObjectFromFile(target, path.Join(source, file))
+		fmt.Println("uploading " + fileTarget + " " + strconv.FormatFloat(idx/filesLen, 'f', 2, 64) + "%")
+		err = bucket.PutObjectFromFile(fileTarget, fileSource)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		float, err := strconv.ParseFloat(fmt.Sprintf("%.2f", idx/filesLen), 64)
-		fmt.Println(float, "%", target)
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
@@ -72,4 +69,5 @@ func main() {
 			os.Exit(1)
 		}
 	}
+	fmt.Println("uploading complete")
 }
