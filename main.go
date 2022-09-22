@@ -54,7 +54,7 @@ func main() {
 		idx := float64(index+1) * 100
 		err = bucket.PutObjectFromFile(path.Join(target, file), path.Join(source, file))
 		float, err := strconv.ParseFloat(fmt.Sprintf("%.2f", idx/filesLen), 64)
-		fmt.Println(float, "%")
+		fmt.Println(float, "%", path.Join(target, file))
 		if err != nil {
 			return
 		}
