@@ -29,7 +29,7 @@ steps:
       - git checkout $DRONE_COMMIT
 
   - name: build
-    image: golang:1.21.0
+    image: golang:1.21.0-alpine
     depends_on: [clone]
     commands:
       - pwd
