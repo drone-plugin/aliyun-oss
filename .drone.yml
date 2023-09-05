@@ -1,24 +1,32 @@
 kind: pipeline
 type: docker
 name: default
-volumes:
-  - name: ssh_keys
-    host:
-      path: /root/.ssh
 clone:
   disable: true
 
 steps:
   - name: clone
-    image: alpine/git
-    volumes:
-      - name: ssh_keys
-        path: /root/.ssh
+    image: bitnami/git
+    environment:
+      SSH_KEY:
+        from_secret: ssh_key
     commands:
+      - mkdir -p $HOME/.ssh/
+      - echo -n "$SSH_KEY" > $HOME/.ssh/id_ed25519
+      - chmod 600 $HOME/.ssh/id_ed25519
+
+      - touch $HOME/.ssh/known_hosts
+      - chmod 600 $HOME/.ssh/known_hosts
+      - touch $HOME/.ssh/config
+      - chmod 600 $HOME/.ssh/config
+      - echo "Host github.com\n    Hostname ssh.github.com\n    Port 443\n    User git" > $HOME/.ssh/config
+      - echo "[ssh.github.com]:443 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl" >> $HOME/.ssh/known_hosts
+      - git config --global init.defaultBranch main
       - git init
+      - git config advice.detachedHead false
       - git remote add origin $DRONE_GIT_SSH_URL
-      - git fetch --no-tags --prune --progress --no-recurse-submodules --depth=1
-      - git checkout origin/$DRONE_COMMIT_BRANCH -ft
+      - git fetch --no-tags --prune --no-recurse-submodules origin $DRONE_COMMIT_BRANCH
+      - git checkout $DRONE_COMMIT
 
   - name: build
     image: golang:1.19.0-alpine3.16
