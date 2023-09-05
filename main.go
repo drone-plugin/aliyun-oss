@@ -3,11 +3,21 @@ package main
 import (
 	"fmt"
 	"github.com/aliyun/aliyun-oss-go-sdk/oss"
+	"math"
 	"os"
 	"path"
 	"strconv"
 	"strings"
 )
+
+func BytesToSize(bytes int64) string {
+	sizes := []string{"B", "KB", "MB", "GB", "TB"}
+	if bytes == 0 {
+		return "0 B"
+	}
+	i := int(math.Floor(math.Log(float64(bytes)) / math.Log(1024)))
+	return strconv.FormatFloat(float64(bytes)/math.Pow(1024, float64(i)), 'f', 2, 64) + " " + sizes[i]
+}
 
 func getAllFile(dirPath string, parentPath string) (allFiles []string) {
 	files, _ := os.ReadDir(dirPath)
@@ -54,7 +64,14 @@ func main() {
 		if strings.HasPrefix(fileTarget, "/") {
 			fileTarget = fileTarget[1:]
 		}
-		fmt.Println("uploading " + fileTarget + " " + strconv.FormatFloat(idx/filesLen, 'f', 2, 64) + "%")
+		// 获取文件大小并转换为直观的大小表示
+		fileInfo, err := os.Stat(fileSource)
+		if err != nil {
+			fmt.Println("Error getting file size:", err)
+			os.Exit(1)
+		}
+		humanReadableSize := BytesToSize(fileInfo.Size())
+		fmt.Println("uploading " + fileTarget + " " + strconv.FormatFloat(idx/filesLen, 'f', 2, 64) + "%" + " (" + humanReadableSize + ")")
 		err = bucket.PutObjectFromFile(fileTarget, fileSource)
 		if err != nil {
 			fmt.Println(err)
