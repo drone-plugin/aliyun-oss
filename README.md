@@ -1,10 +1,11 @@
 # 阿里云oss上传插件
 
 ```yaml
-  - name: oss
-    image: registry.cn-shanghai.aliyuncs.com/zzf2001/drone-aliyun-oss
+steps:
+  - name: upload-to-oss
+    image: wwma/drone-aliyun-oss
     settings:
-      endpoint:
+      ENDPOINT:
         from_secret: endpoint
       ACCESS_KEY_ID:
         from_secret: accessKeyID
@@ -12,8 +13,8 @@
         from_secret: accessKeySecret
       BUCKET_NAME:
         from_secret: bucketName
-      target: dist
-      source: dist
+      target: /destination/path/
+      source: /source/path/*
 ```
 ### dev
 ```bash
