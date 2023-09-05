@@ -42,10 +42,10 @@ steps:
     image: plugins/docker
     pull: if-not-exists
     settings:
-      registry: registry.cn-shanghai.aliyuncs.com
       username:
         from_secret: docker_username
       password:
         from_secret: docker_password
-      repo: registry.cn-shanghai.aliyuncs.com/zzf2001/drone-aliyun-oss
-      tags: latest
+      repo: wwma/drone-aliyun-oss
+      tags:
+        - latest

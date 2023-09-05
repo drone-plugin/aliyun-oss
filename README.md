@@ -15,3 +15,9 @@
       target: dist
       source: dist
 ```
+### dev
+```bash
+go get -u && go mod tidy
+#go get -u 会更新所有的包
+#tidy 会重新整理 go.mod 文件。
+```
