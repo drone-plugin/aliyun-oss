@@ -12,7 +12,7 @@ import (
 
 const workerCount = 5
 
-func uploadWorker(bucket *oss.Bucket, jobs <-chan string, wg *sync.WaitGroup, source string, target string) {
+func uploadWorker(bucket *oss.Bucket, jobs <-chan string, wg *sync.WaitGroup, source string, target string, progress chan<- int, workerID int) {
 	defer wg.Done()
 
 	for file := range jobs {
@@ -26,10 +26,12 @@ func uploadWorker(bucket *oss.Bucket, jobs <-chan string, wg *sync.WaitGroup, so
 		}
 
 		humanReadableSize := BytesToSize(fileInfo.Size())
-		fmt.Println("uploading " + fileTarget + " (" + humanReadableSize + ")")
 		err = bucket.PutObjectFromFile(fileTarget, fileSource)
 		if err != nil {
-			fmt.Println("Error uploading file:", err)
+			fmt.Printf("[Worker %d] Error uploading file: %s\n", workerID, err)
+		} else {
+			fmt.Printf("[Worker %d] Uploaded %s (%s)\n", workerID, fileTarget, humanReadableSize)
+			progress <- 1
 		}
 	}
 }
@@ -82,10 +84,11 @@ func main() {
 	files, err := getAllFile(source, "")
 	exitOnError(err)
 	jobs := make(chan string, len(files))
+	progress := make(chan int, len(files))
 	var wg sync.WaitGroup
 	for i := 0; i < workerCount; i++ {
 		wg.Add(1)
-		go uploadWorker(bucket, jobs, &wg, source, target)
+		go uploadWorker(bucket, jobs, &wg, source, target, progress, i+1)
 	}
 
 	// 将文件路径放入工作通道
