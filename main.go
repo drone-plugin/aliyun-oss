@@ -7,8 +7,32 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"sync"
 )
 
+const workerCount = 5
+
+func uploadWorker(bucket *oss.Bucket, jobs <-chan string, wg *sync.WaitGroup, source string, target string) {
+	defer wg.Done()
+
+	for file := range jobs {
+		fileTarget := filepath.Join(target, file)
+		fileSource := filepath.Join(source, file)
+
+		fileInfo, err := os.Stat(fileSource)
+		if err != nil {
+			fmt.Println("Error getting file size:", err)
+			continue
+		}
+
+		humanReadableSize := BytesToSize(fileInfo.Size())
+		fmt.Println("uploading " + fileTarget + " (" + humanReadableSize + ")")
+		err = bucket.PutObjectFromFile(fileTarget, fileSource)
+		if err != nil {
+			fmt.Println("Error uploading file:", err)
+		}
+	}
+}
 func BytesToSize(bytes int64) string {
 	sizes := []string{"B", "KB", "MB", "GB", "TB"}
 	if bytes == 0 {
@@ -57,18 +81,19 @@ func main() {
 	exitOnError(err)
 	files, err := getAllFile(source, "")
 	exitOnError(err)
-	filesLen := float64(len(files))
-	for index, file := range files {
-		percentage := (float64(index+1) / filesLen) * 100
-		fileTarget := filepath.Join(target, file)
-		fileSource := filepath.Join(source, file)
-		// 获取文件大小并转换为直观的大小表示
-		fileInfo, err := os.Stat(fileSource)
-		exitOnError(err)
-		humanReadableSize := BytesToSize(fileInfo.Size())
-		fmt.Println("uploading " + fileTarget + " " + strconv.FormatFloat(percentage, 'f', 2, 64) + "%" + " (" + humanReadableSize + ")")
-		err = bucket.PutObjectFromFile(fileTarget, fileSource)
-		exitOnError(err)
+	jobs := make(chan string, len(files))
+	var wg sync.WaitGroup
+	for i := 0; i < workerCount; i++ {
+		wg.Add(1)
+		go uploadWorker(bucket, jobs, &wg, source, target)
 	}
+
+	// 将文件路径放入工作通道
+	for _, file := range files {
+		jobs <- file
+	}
+	close(jobs)
+	wg.Wait()
+
 	fmt.Println("uploading complete")
 }
