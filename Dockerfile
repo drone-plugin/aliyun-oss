@@ -1,4 +1,4 @@
-FROM alpine:latest
+FROM scratch
 
 ADD  main /bin/
 RUN apk -Uuv add ca-certificates
