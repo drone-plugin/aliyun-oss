@@ -29,6 +29,6 @@ steps:
         from_secret: docker_username
       password:
         from_secret: docker_password
-      repo: wwma/drone-aliyun-oss
+      repo: nmtz/drone-aliyun-oss
       tags:
         - latest
