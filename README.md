@@ -3,7 +3,7 @@
 ```yaml
 steps:
   - name: upload-to-oss
-    image: wwma/drone-aliyun-oss
+    image: nmtz/drone-aliyun-oss
     settings:
       ENDPOINT:
         from_secret: endpoint
